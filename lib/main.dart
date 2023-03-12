@@ -1,4 +1,13 @@
+// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_underscores_for_local_identifiers
+
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_scanbarcode/DAO/dao.dart';
+import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:excel/excel.dart';
 
 void main() {
   runApp(const MyApp());
@@ -52,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
-  void _incrementCounter() {
+  Future<void> _incrementCounter() async {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -61,100 +70,156 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+    scaninfo si = new scaninfo(
+        id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
+    //dao.database();
+    //dao.insertData(si);
+    List<scaninfo> lst = await dao.getAllData();
+    List<scaninfo> lstobj;
+    Directory? _localFile = await getExternalStorageDirectory();
+    String? appDocPath = _localFile?.path.toString();
+    print(appDocPath);
+    //final file = File('$appDocPath/counter.txt');
+    // Write the file
+    Excel excel = Excel.createExcel();
+    Sheet sheetObject = excel['Sheet1'];
+
+    // Ghi dữ liệu vào file Excel
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
+        .value = "ID";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
+        .value = "serialnumber";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
+        .value = "materialcode";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1))
+        .value = "LL";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 1))
+        .value = "kkkk";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 1))
+        .value = "ooo";
+    // write data
+    for (int i = 0; i < lst.length; i++) {
+      scaninfo sc = lst[i];
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1))
+          .value = sc.id;
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1))
+          .value = sc.serialnum;
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
+          .value = sc.matcode;
+    }
+    // Lưu file Excel vào thư mục Documents trên thiết bị
+    String excelFilePath = '$appDocPath/example.xlsx';
+    if (_localFile != null) {
+      File file = File(excelFilePath);
+      List<int>? bytes = excel.encode();
+      file.createSync(recursive: true);
+      file.writeAsBytes(bytes!);
+    }
+  }
+
+  Future<List<scaninfo>> _getScanInfoList() async {
+    List<scaninfo> lst = await dao.getAllData();
+    int count = lst.length;
+    print(count);
+    return lst;
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: SingleChildScrollView(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.blueAccent),
             borderRadius: BorderRadius.circular(10.0),
           ),
-          // ignore: prefer_const_constructors
           margin: EdgeInsets.all(10.0),
-          // ignore: prefer_const_constructors
           padding: EdgeInsets.all(10.0),
-
-          child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug painting" (press "p" in the console, choose the
-            // "Toggle Debug Paint" action from the Flutter Inspector in Android
-            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-            // to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              TextField(
-                controller: serialnumController,
-                // ignore: prefer_const_constructors
-                decoration: InputDecoration(
-                  hintText: "Enter serial number",
-                  labelText: "Serial Number",
+          child: Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                TextField(
+                  controller: serialnumController,
+                  decoration: InputDecoration(
+                    hintText: "Enter serial number",
+                    labelText: "Serial Number",
+                  ),
                 ),
-              ),
-              TextField(
-                controller: matcodeController,
-                // ignore: prefer_const_constructors
-                decoration: InputDecoration(
-                  hintText: "Enter material code",
-                  labelText: "Material Code",
+                TextField(
+                  controller: matcodeController,
+                  decoration: InputDecoration(
+                    hintText: "Enter material code",
+                    labelText: "Material Code",
+                  ),
                 ),
-              ),
-              TextField(
-                controller: dnnoController,
-                // ignore: prefer_const_constructors
-                decoration: InputDecoration(
-                  hintText: "Enter DN number",
-                  labelText: "DN Number",
+                TextField(
+                  controller: dnnoController,
+                  decoration: InputDecoration(
+                    hintText: "Enter DN number",
+                    labelText: "DN Number",
+                  ),
                 ),
-              ),
-              const Text(
-                'You have pushed the button this many times:',
-              ),
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ],
+                const Text(
+                  'You have pushed the button this many times:',
+                ),
+                Text(
+                  '$_counter',
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+                // Expanded(
+                //   child: FutureBuilder<List<scaninfo>>(
+                //     future: _getScanInfoList(),
+                //     builder: (BuildContext context,
+                //         AsyncSnapshot<List<scaninfo>> snapshot) {
+                //       if (snapshot.connectionState == ConnectionState.waiting) {
+                //         return CircularProgressIndicator();
+                //       } else if (snapshot.hasError) {
+                //         return Text('Error: ${snapshot.error}');
+                //       } else if (!snapshot.hasData) {
+                //         return Text('No data found.');
+                //       } else {
+                //         return ListView.builder(
+                //           itemCount: snapshot.data!.length,
+                //           itemBuilder: (BuildContext context, int index) {
+                //             scaninfo scan = snapshot.data![index];
+                //             return ListTile(
+                //               title: Text(scan.serialnum),
+                //               subtitle: Text("${scan.matcode} - ${scan.dnno}"),
+                //             );
+                //           },
+                //         );
+                //       }
+                //     },
+                //   ),
+                // ),
+              ],
+            ),
           ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-          child: ListView(
-              // ignore: prefer_const_literals_to_create_immutables
-              children: <Widget>[
-            // ignore: prefer_const_constructors
-            ListTile(title: Text('Item1')),
-            ListTile(title: Text('Item1')),
-          ])),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
