@@ -32,6 +32,15 @@ class dao {
     });
   }
 
+  Future<List<Map<String, dynamic>>> getAllScanInfoMapList() async {
+    final Database db = await database();
+
+    // query the table for all rows
+    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber');
+
+    return maps;
+  }
+
   // Thêm dữ liệu
   static Future<void> insertData(scaninfo scaninfo) async {
     final Database db = await database();
