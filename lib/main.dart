@@ -58,22 +58,30 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  List<scaninfo> _lst = [];
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _getScanInfoList();
+  }
+
   Future<void> _incrementCounter() async {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-    scaninfo si = new scaninfo(
-        id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
+    // setState(() {
+    //   // This call to setState tells the Flutter framework that something has
+    //   // changed in this State, which causes it to rerun the build method below
+    //   // so that the display can reflect the updated values. If we changed
+    //   // _counter without calling setState(), then the build method would not be
+    //   // called again, and so nothing would appear to happen.
+    //   //_counter = _lst.length;
+    // });
+    // scaninfo si = new scaninfo(
+    //     id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
     //dao.database();
-    //dao.insertData(si);
+    //dao.insertData(si);//
     List<scaninfo> lst = await dao.getAllData();
     List<scaninfo> lstobj;
     Directory? _localFile = await getExternalStorageDirectory();
@@ -94,15 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
     sheetObject
         .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
         .value = "materialcode";
-    sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1))
-        .value = "LL";
-    sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 1))
-        .value = "kkkk";
-    sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 1))
-        .value = "ooo";
     // write data
     for (int i = 0; i < lst.length; i++) {
       scaninfo sc = lst[i];
@@ -126,16 +125,20 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<List<scaninfo>> _getScanInfoList() async {
+  Future<void> _getScanInfoList() async {
     List<scaninfo> lst = await dao.getAllData();
-    int count = lst.length;
-    print(count);
-    return lst;
+    setState(() {
+      _lst = lst;
+      _counter = lst.length;
+    });
   }
 
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+  Future<void> _addScanToDatabase(scaninfo scanInfo) async {
+    // Thêm dữ liệu vào database ở đây
+    // ...
+    // Sau khi thêm dữ liệu thành công, load danh sách mới từ database
+    dao.insertData(scanInfo);
+    await _getScanInfoList();
   }
 
   @override
@@ -144,81 +147,112 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.blueAccent),
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          margin: EdgeInsets.all(10.0),
-          padding: EdgeInsets.all(10.0),
-          child: Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextField(
-                  controller: serialnumController,
-                  decoration: InputDecoration(
-                    hintText: "Enter serial number",
-                    labelText: "Serial Number",
-                  ),
-                ),
-                TextField(
-                  controller: matcodeController,
-                  decoration: InputDecoration(
-                    hintText: "Enter material code",
-                    labelText: "Material Code",
-                  ),
-                ),
-                TextField(
-                  controller: dnnoController,
-                  decoration: InputDecoration(
-                    hintText: "Enter DN number",
-                    labelText: "DN Number",
-                  ),
-                ),
-                const Text(
-                  'You have pushed the button this many times:',
-                ),
-                Text(
-                  '$_counter',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-                // Expanded(
-                //   child: FutureBuilder<List<scaninfo>>(
-                //     future: _getScanInfoList(),
-                //     builder: (BuildContext context,
-                //         AsyncSnapshot<List<scaninfo>> snapshot) {
-                //       if (snapshot.connectionState == ConnectionState.waiting) {
-                //         return CircularProgressIndicator();
-                //       } else if (snapshot.hasError) {
-                //         return Text('Error: ${snapshot.error}');
-                //       } else if (!snapshot.hasData) {
-                //         return Text('No data found.');
-                //       } else {
-                //         return ListView.builder(
-                //           itemCount: snapshot.data!.length,
-                //           itemBuilder: (BuildContext context, int index) {
-                //             scaninfo scan = snapshot.data![index];
-                //             return ListTile(
-                //               title: Text(scan.serialnum),
-                //               subtitle: Text("${scan.matcode} - ${scan.dnno}"),
-                //             );
-                //           },
-                //         );
-                //       }
-                //     },
-                //   ),
-                // ),
-              ],
+      body: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.blueAccent),
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        margin: EdgeInsets.all(10.0),
+        padding: EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            TextField(
+              controller: dnnoController,
+              decoration: InputDecoration(
+                hintText: "Nhập số phiếu",
+                labelText: "Số phiếu",
+              ),
             ),
-          ),
+            TextField(
+              controller: matcodeController,
+              decoration: InputDecoration(
+                hintText: "Nhập mã sản phẩm",
+                labelText: "Mã sản phẩm",
+              ),
+            ),
+            TextField(
+              controller: serialnumController,
+              decoration: InputDecoration(
+                hintText: "Nhập số máy",
+                labelText: "Số máy",
+              ),
+              onSubmitted: (value) {
+                final newScanInfo = scaninfo(
+                    serialnum: value,
+                    matcode: matcodeController.text,
+                    dnno: dnnoController.text,
+                    createdate: DateTime.now().toIso8601String());
+                _addScanToDatabase(newScanInfo);
+              },
+            ),
+            Text(
+              'Tổng số dòng : $_counter',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                // decoration: TextDecoration.underline,
+                //decorationColor: Colors.red,
+                decorationStyle: TextDecorationStyle.wavy,
+              ),
+              textAlign: TextAlign.left,
+            ),
+            Expanded(
+              child: FutureBuilder<List<scaninfo>>(
+                future: Future.value(_lst),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error: ${snapshot.error}'),
+                    );
+                  }
+
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  final scanInfoList = snapshot.data!;
+
+                  if (scanInfoList.isEmpty) {
+                    return Center(
+                      child: Text('No data available.'),
+                    );
+                  }
+
+                  return SizedBox(
+                    height: MediaQuery.of(context).size.height -
+                        AppBar().preferredSize.height -
+                        MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.bottom -
+                        16.0, // set a fixed height for the ListView
+                    child: ListView.builder(
+                      itemCount: scanInfoList.length,
+                      itemBuilder: (context, index) {
+                        final scanInfo = scanInfoList[index];
+
+                        return ListTile(
+                          title: Text("Số máy: " + scanInfo.serialnum),
+                          subtitle: Text("Số phiếu: " +
+                              scanInfo.dnno +
+                              "| Mã sản phẩm: " +
+                              scanInfo.matcode),
+                          //trailing: Text(scanInfo.dnno),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.import_export),
       ),
     );
   }

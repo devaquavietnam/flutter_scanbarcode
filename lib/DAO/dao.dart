@@ -11,11 +11,16 @@ class dao {
       join(await getDatabasesPath(), 'serialnumber.db'),
       onCreate: (db, version) {
         return db.execute(
-          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT)",
+          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT)",
         );
       },
-      version: 1,
+      version: 102,
     );
+  }
+
+  static Future<void> deleteTable() async {
+    final db = await database();
+    await db.execute("DROP TABLE IF EXISTS tblserialnumber");
   }
 
   // Lấy toàn bộ dữ liệu
@@ -24,11 +29,11 @@ class dao {
     final List<Map<String, dynamic>> maps = await db.query('tblserialnumber');
     return List.generate(maps.length, (i) {
       return scaninfo(
-        id: maps[i]['id'],
-        serialnum: maps[i]['serialnum'],
-        matcode: maps[i]['matcode'],
-        dnno: maps[i]['dnno'],
-      );
+          id: maps[i]['id'],
+          serialnum: maps[i]['serialnum'],
+          matcode: maps[i]['matcode'],
+          dnno: maps[i]['dnno'],
+          createdate: maps[i]['createdate']);
     });
   }
 
@@ -36,7 +41,8 @@ class dao {
     final Database db = await database();
 
     // query the table for all rows
-    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber');
+    final List<Map<String, dynamic>> maps =
+        await db.query('tblserialnumber', orderBy: 'createdate DESC');
 
     return maps;
   }
@@ -47,6 +53,16 @@ class dao {
     await db.insert(
       'tblserialnumber',
       scaninfo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    // deleteTable();
+  }
+
+  Future<void> insertScanInfo(scaninfo scanInfo) async {
+    final db = await database();
+    await db.insert(
+      'tblserialnumber',
+      scanInfo.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
