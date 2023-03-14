@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'AQUA SANNER',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'AQUA SCANNER'),
     );
   }
 }
@@ -59,14 +59,25 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   List<scaninfo> _lst = [];
+  int? _selectedOption = 0;
+
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
-
+  late FocusNode myFocusNode;
   @override
   void initState() {
     super.initState();
     _getScanInfoList();
+    myFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    // Clean up the focus node when the Form is disposed.
+    myFocusNode.dispose();
+
+    super.dispose();
   }
 
   Future<void> _incrementCounter() async {
@@ -98,10 +109,17 @@ class _MyHomePageState extends State<MyHomePage> {
         .value = "ID";
     sheetObject
         .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
-        .value = "serialnumber";
+        .value = "Số máy";
     sheetObject
         .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
-        .value = "materialcode";
+        .value = "Mã sản phẩm";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 0))
+        .value = "Số phiếu";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: 0))
+        .value = "Ngày";
+
     // write data
     for (int i = 0; i < lst.length; i++) {
       scaninfo sc = lst[i];
@@ -114,15 +132,52 @@ class _MyHomePageState extends State<MyHomePage> {
       sheetObject
           .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
           .value = sc.matcode;
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i + 1))
+          .value = sc.dnno;
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
+          .value = sc.createdate;
     }
-    // Lưu file Excel vào thư mục Documents trên thiết bị
-    String excelFilePath = '$appDocPath/example.xlsx';
+    // Lưu file Excel vào thư mục Documents trên thiết bịg
+    String filename = 'Aqua_SoMay_' + DateTime.now().toString();
+    String excelFilePath = '$appDocPath/' + filename + '.xlsx';
     if (_localFile != null) {
       File file = File(excelFilePath);
       List<int>? bytes = excel.encode();
       file.createSync(recursive: true);
       file.writeAsBytes(bytes!);
+      //DialogExample();
+      // ignore: use_build_context_synchronously
+      showAlertDialog(context, "Thông báo", "Xuất tập tin excel thành công");
     }
+  }
+
+  showAlertDialog(BuildContext context, String title, String conten) {
+    // set up the button
+    Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text(title),
+      content: Text(conten),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
   Future<void> _getScanInfoList() async {
@@ -157,6 +212,40 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Radio<int>(
+                      value: 0,
+                      groupValue: _selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedOption = value;
+                        });
+                      },
+                    ),
+                    const Text('Xuất kho'),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Radio<int>(
+                      value: 1,
+                      groupValue: _selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedOption = value;
+                        });
+                      },
+                    ),
+                    const Text('Nhập kho'),
+                  ],
+                ),
+              ],
+            ),
+
             TextField(
               controller: dnnoController,
               decoration: InputDecoration(
@@ -164,26 +253,40 @@ class _MyHomePageState extends State<MyHomePage> {
                 labelText: "Số phiếu",
               ),
             ),
-            TextField(
-              controller: matcodeController,
-              decoration: InputDecoration(
-                hintText: "Nhập mã sản phẩm",
-                labelText: "Mã sản phẩm",
-              ),
-            ),
+            // TextField(
+            //   controller: matcodeController,
+            //   decoration: InputDecoration(
+            //     hintText: "Nhập mã sản phẩm",
+            //     labelText: "Mã sản phẩm",
+            //   ),
+            // ),
             TextField(
               controller: serialnumController,
+              focusNode: myFocusNode,
               decoration: InputDecoration(
                 hintText: "Nhập số máy",
                 labelText: "Số máy",
               ),
               onSubmitted: (value) {
-                final newScanInfo = scaninfo(
-                    serialnum: value,
-                    matcode: matcodeController.text,
-                    dnno: dnnoController.text,
-                    createdate: DateTime.now().toIso8601String());
-                _addScanToDatabase(newScanInfo);
+                if (dnnoController.text.isEmpty) {
+                  showAlertDialog(
+                      context, "Thông báo", "Số phiếu không được để trống");
+                } else {
+                  if (value.isEmpty || value.length < 9) {
+                    showAlertDialog(context, "Thông báo",
+                        "Số máy không đúng định dạng Aqua.Xin vui lòng thử lại");
+                  } else {
+                    final newScanInfo = scaninfo(
+                        serialnum: value,
+                        matcode: value.substring(0, 9),
+                        dnno: dnnoController.text,
+                        createdate: DateTime.now().toIso8601String());
+
+                    _addScanToDatabase(newScanInfo);
+                    serialnumController.clear();
+                    myFocusNode.requestFocus();
+                  }
+                }
               },
             ),
             Text(
