@@ -119,6 +119,9 @@ class _MyHomePageState extends State<MyHomePage> {
     sheetObject
         .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: 0))
         .value = "Ngày";
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: 0))
+        .value = "Xuất/nhập";
 
     // write data
     for (int i = 0; i < lst.length; i++) {
@@ -138,6 +141,13 @@ class _MyHomePageState extends State<MyHomePage> {
       sheetObject
           .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
           .value = sc.createdate;
+      String xuatnhap = "Xuất";
+      if (sc.inout == "2") {
+        xuatnhap = "Nhập";
+      }
+      sheetObject
+          .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
+          .value = xuatnhap;
     }
     // Lưu file Excel vào thư mục Documents trên thiết bịg
     String filename = 'Aqua_SoMay_' + DateTime.now().toString();
@@ -277,11 +287,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         "Số máy không đúng định dạng Aqua.Xin vui lòng thử lại");
                   } else {
                     final newScanInfo = scaninfo(
-                        serialnum: value,
-                        matcode: value.substring(0, 9),
-                        dnno: dnnoController.text,
-                        createdate: DateTime.now().toIso8601String());
-
+                      serialnum: value,
+                      matcode: value.substring(0, 9),
+                      dnno: dnnoController.text,
+                      createdate: DateTime.now().toIso8601String(),
+                      inout: _selectedOption.toString(),
+                    );
                     _addScanToDatabase(newScanInfo);
                     serialnumController.clear();
                     myFocusNode.requestFocus();

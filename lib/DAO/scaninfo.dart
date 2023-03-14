@@ -5,13 +5,16 @@ class scaninfo {
   final String matcode;
   final String dnno;
   final String? createdate;
+  final String? inout;
 
-  scaninfo(
-      {this.id,
-      required this.serialnum,
-      required this.matcode,
-      required this.dnno,
-      this.createdate});
+  scaninfo({
+    this.id,
+    required this.serialnum,
+    required this.matcode,
+    required this.dnno,
+    this.createdate,
+    this.inout,
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -19,7 +22,8 @@ class scaninfo {
       'serialnum': serialnum,
       'matcode': matcode,
       'dnno': dnno,
-      'createdate': createdate
+      'createdate': createdate,
+      'inout': inout
     };
   }
 }
