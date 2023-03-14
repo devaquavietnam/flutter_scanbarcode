@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_scanbarcode">
+    package="com.aqua.vn_dms_scan">
    <application
-        android:label="flutter_scanbarcode"
+        android:label="AQUA DMS SCAN"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

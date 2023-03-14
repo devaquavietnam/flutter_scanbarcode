@@ -1,4 +1,4 @@
-package com.example.flutter_scanbarcode
+package com.aqua.vn_dms_scan
 
 import io.flutter.embedding.android.FlutterActivity
 
