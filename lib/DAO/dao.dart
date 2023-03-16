@@ -11,7 +11,7 @@ class dao {
       join(await getDatabasesPath(), 'serialnumber.db'),
       onCreate: (db, version) {
         return db.execute(
-          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT)",
+          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT,isshow INTEGER)",
         );
       },
       version: 103,
@@ -26,6 +26,22 @@ class dao {
   // Lấy toàn bộ dữ liệu
   static Future<List<scaninfo>> getAllData() async {
     final Database db = await database();
+    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber',
+        where: 'isshow = 1', orderBy: 'id DESC');
+    return List.generate(maps.length, (i) {
+      return scaninfo(
+          id: maps[i]['id'],
+          serialnum: maps[i]['serialnum'],
+          matcode: maps[i]['matcode'],
+          dnno: maps[i]['dnno'],
+          createdate: maps[i]['createdate'],
+          inout: maps[i]['inout'],
+          isshow: maps[i]['isshow']);
+    });
+  }
+
+  static Future<List<scaninfo>> getAllDataToExport() async {
+    final Database db = await database();
     final List<Map<String, dynamic>> maps =
         await db.query('tblserialnumber', orderBy: 'id DESC');
     return List.generate(maps.length, (i) {
@@ -35,7 +51,8 @@ class dao {
           matcode: maps[i]['matcode'],
           dnno: maps[i]['dnno'],
           createdate: maps[i]['createdate'],
-          inout: maps[i]['inout']);
+          inout: maps[i]['inout'],
+          isshow: maps[i]['isshow']);
     });
   }
 

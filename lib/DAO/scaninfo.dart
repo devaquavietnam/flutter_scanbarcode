@@ -6,6 +6,7 @@ class scaninfo {
   final String dnno;
   final String? createdate;
   final String? inout;
+  final int isshow;
 
   scaninfo({
     this.id,
@@ -14,6 +15,7 @@ class scaninfo {
     required this.dnno,
     this.createdate,
     this.inout,
+    required this.isshow,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,7 +25,8 @@ class scaninfo {
       'matcode': matcode,
       'dnno': dnno,
       'createdate': createdate,
-      'inout': inout
+      'inout': inout,
+      'isshow': isshow
     };
   }
 }

@@ -60,7 +60,9 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   List<scaninfo> _lst = [];
   int? _selectedOption = 0;
-
+  String titleButtonScan = "Bắt đầu quét";
+  bool isScaning = false;
+  bool isEnableSoPhieu = true;
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
@@ -80,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<void> _incrementCounter() async {
+  Future<void> _exportExcel() async {
     // setState(() {
     //   // This call to setState tells the Flutter framework that something has
     //   // changed in this State, which causes it to rerun the build method below
@@ -93,7 +95,9 @@ class _MyHomePageState extends State<MyHomePage> {
     //     id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
     //dao.database();
     //dao.insertData(si);//
-    List<scaninfo> lst = await dao.getAllData();
+    List<scaninfo> lst = [];
+
+    await dao.getAllDataToExport();
     List<scaninfo> lstobj;
     Directory? _localFile = await getExternalStorageDirectory();
     String? appDocPath = _localFile?.path.toString();
@@ -206,6 +210,14 @@ class _MyHomePageState extends State<MyHomePage> {
     await _getScanInfoList();
   }
 
+  final ButtonStyle flatButtonStyle = TextButton.styleFrom(
+    foregroundColor: Colors.blue,
+    padding: EdgeInsets.symmetric(horizontal: 16.0),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(2.0)),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -259,9 +271,9 @@ class _MyHomePageState extends State<MyHomePage> {
             TextField(
               controller: dnnoController,
               decoration: InputDecoration(
-                hintText: "Nhập số phiếu",
-                labelText: "Số phiếu",
-              ),
+                  hintText: "Nhập số phiếu",
+                  labelText: "Số phiếu",
+                  enabled: isEnableSoPhieu),
             ),
             // TextField(
             //   controller: matcodeController,
@@ -287,18 +299,35 @@ class _MyHomePageState extends State<MyHomePage> {
                         "Số máy không đúng định dạng Aqua.Xin vui lòng thử lại");
                   } else {
                     final newScanInfo = scaninfo(
-                      serialnum: value,
-                      matcode: value.substring(0, 9),
-                      dnno: dnnoController.text,
-                      createdate: DateTime.now().toIso8601String(),
-                      inout: _selectedOption.toString(),
-                    );
+                        serialnum: value,
+                        matcode: value.substring(0, 9),
+                        dnno: dnnoController.text,
+                        createdate: DateTime.now().toIso8601String(),
+                        inout: _selectedOption.toString(),
+                        isshow: 1);
                     _addScanToDatabase(newScanInfo);
                     serialnumController.clear();
                     myFocusNode.requestFocus();
                   }
                 }
               },
+            ),
+            TextButton(
+              style: flatButtonStyle,
+              onPressed: () {
+                setState(() {
+                  if (!isScaning) {
+                    titleButtonScan = "Dừng quét";
+                    isEnableSoPhieu = false;
+                    isScaning = true;
+                  } else {
+                    titleButtonScan = "Bắt đầu quét";
+                    isScaning = false;
+                    isEnableSoPhieu = true;
+                  }
+                });
+              },
+              child: Text(titleButtonScan),
             ),
             Text(
               'Tổng số dòng : $_counter',
@@ -364,7 +393,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _exportExcel,
         tooltip: 'Increment',
         child: const Icon(Icons.import_export),
       ),
