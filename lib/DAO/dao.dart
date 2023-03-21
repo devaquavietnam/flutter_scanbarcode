@@ -24,7 +24,7 @@ class dao {
   }
 
   // Lấy toàn bộ dữ liệu
-  static Future<List<scaninfo>> getAllData() async {
+  static Future<List<scaninfo>> getDataShowing() async {
     final Database db = await database();
     final List<Map<String, dynamic>> maps = await db.query('tblserialnumber',
         where: 'isshow = 1', orderBy: 'id DESC');

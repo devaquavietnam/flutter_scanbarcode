@@ -6,7 +6,7 @@ class scaninfo {
   final String dnno;
   final String? createdate;
   final String? inout;
-  final int isshow;
+  int isshow;
 
   scaninfo({
     this.id,

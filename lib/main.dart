@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_underscores_for_local_identifiers
+// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_for_local_identifiers
 
 import 'dart:ffi';
 
@@ -63,6 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String titleButtonScan = "Bắt đầu quét";
   bool isScaning = false;
   bool isEnableSoPhieu = true;
+  bool isEnnaleSerial = false;
+  bool isExportAll = true;
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
@@ -95,9 +97,17 @@ class _MyHomePageState extends State<MyHomePage> {
     //     id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
     //dao.database();
     //dao.insertData(si);//
+    if (isScaning == true && isExportAll == false) {
+      showAlertDialog(
+          context, "Thông báo", "Vui lòng dừng quét trước khi xuất tất cả");
+      return;
+    }
     List<scaninfo> lst = [];
-
-    await dao.getAllDataToExport();
+    if (!isExportAll) {
+      lst = await dao.getDataShowing();
+    } else {
+      lst = await dao.getAllDataToExport();
+    }
     List<scaninfo> lstobj;
     Directory? _localFile = await getExternalStorageDirectory();
     String? appDocPath = _localFile?.path.toString();
@@ -152,6 +162,9 @@ class _MyHomePageState extends State<MyHomePage> {
       sheetObject
           .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
           .value = xuatnhap;
+      sc.isshow = 0;
+      await dao.updateData(sc);
+      _getScanInfoList();
     }
     // Lưu file Excel vào thư mục Documents trên thiết bịg
     String filename = 'Aqua_SoMay_' + DateTime.now().toString();
@@ -195,7 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _getScanInfoList() async {
-    List<scaninfo> lst = await dao.getAllData();
+    List<scaninfo> lst = await dao.getDataShowing();
     setState(() {
       _lst = lst;
       _counter = lst.length;
@@ -210,11 +223,11 @@ class _MyHomePageState extends State<MyHomePage> {
     await _getScanInfoList();
   }
 
-  final ButtonStyle flatButtonStyle = TextButton.styleFrom(
-    foregroundColor: Colors.blue,
-    padding: EdgeInsets.symmetric(horizontal: 16.0),
+  final ButtonStyle flatButtonStyle = OutlinedButton.styleFrom(
+    backgroundColor: Colors.blue,
+    padding: EdgeInsets.symmetric(horizontal: 36.0),
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(2.0)),
+      borderRadius: BorderRadius.all(Radius.circular(20.0)),
     ),
   );
 
@@ -223,6 +236,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        toolbarHeight: 40,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -286,9 +300,9 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: serialnumController,
               focusNode: myFocusNode,
               decoration: InputDecoration(
-                hintText: "Nhập số máy",
-                labelText: "Số máy",
-              ),
+                  hintText: "Nhập số máy",
+                  labelText: "Số máy",
+                  enabled: isEnnaleSerial),
               onSubmitted: (value) {
                 if (dnnoController.text.isEmpty) {
                   showAlertDialog(
@@ -307,12 +321,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         isshow: 1);
                     _addScanToDatabase(newScanInfo);
                     serialnumController.clear();
-                    myFocusNode.requestFocus();
+                    if (isScaning) {
+                      myFocusNode.requestFocus();
+                    }
                   }
                 }
               },
             ),
-            TextButton(
+            OutlinedButton(
               style: flatButtonStyle,
               onPressed: () {
                 setState(() {
@@ -320,10 +336,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     titleButtonScan = "Dừng quét";
                     isEnableSoPhieu = false;
                     isScaning = true;
+                    isExportAll = false;
+                    isEnnaleSerial = true;
                   } else {
                     titleButtonScan = "Bắt đầu quét";
                     isScaning = false;
                     isEnableSoPhieu = true;
+                    _exportExcel();
+                    isExportAll = true;
+                    isEnnaleSerial = false;
                   }
                 });
               },
