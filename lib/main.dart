@@ -225,6 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final ButtonStyle flatButtonStyle = OutlinedButton.styleFrom(
     backgroundColor: Colors.blue,
+    foregroundColor: Colors.white,
     padding: EdgeInsets.symmetric(horizontal: 36.0),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(20.0)),
