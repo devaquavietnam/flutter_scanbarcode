@@ -1,6 +1,4 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_for_local_identifiers
-
-import 'dart:ffi';
+// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_for_local_identifiers, depend_on_referenced_packages
 
 import 'package:flutter/material.dart';
 import 'package:flutter_scanbarcode/DAO/dao.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(const MyApp());
@@ -64,7 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isScaning = false;
   bool isEnableSoPhieu = true;
   bool isEnnaleSerial = false;
+  bool isEnableBtnXoa = false;
   bool isExportAll = true;
+  String notifi = 'Tổng số dòng: ';
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
@@ -97,11 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //     id: 3, serialnum: "AAAAAA", matcode: "matcode", dnno: "dnno");
     //dao.database();
     //dao.insertData(si);//
-    if (isScaning == true && isExportAll == false) {
-      showAlertDialog(
-          context, "Thông báo", "Vui lòng dừng quét trước khi xuất tất cả");
-      return;
-    }
+
     List<scaninfo> lst = [];
     if (!isExportAll) {
       lst = await dao.getDataShowing();
@@ -165,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
       sc.isshow = 0;
       await dao.updateData(sc);
       _getScanInfoList();
+      notifi = 'Tổng số dòng: $_counter';
     }
     // Lưu file Excel vào thư mục Documents trên thiết bịg
     String filename = 'Aqua_SoMay_' + DateTime.now().toString();
@@ -176,8 +174,19 @@ class _MyHomePageState extends State<MyHomePage> {
       file.writeAsBytes(bytes!);
       //DialogExample();
       // ignore: use_build_context_synchronously
-      showAlertDialog(context, "Thông báo", "Xuất tập tin excel thành công");
+      _showToast("Xuất tập tin excel thành công");
     }
+  }
+
+  _showToast(String message) {
+    Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0);
   }
 
   showAlertDialog(BuildContext context, String title, String conten) {
@@ -207,11 +216,54 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _deleteAll() async {
+    await dao.deleteAllData();
+    _getScanInfoList();
+  }
+
+  showAlertDeleteData(BuildContext context, String title, String conten) {
+    // set up the button
+    Widget okButton = TextButton(
+      child: Text("Có"),
+      onPressed: () {
+        Navigator.of(context).pop();
+        _exportExcel();
+        _deleteAll();
+      },
+    );
+    Widget cancelButton = TextButton(
+      child: Text("Không"),
+      onPressed: () {
+        Navigator.of(context).pop();
+        _exportExcel();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text(title),
+      content: Text(conten),
+      actions: [
+        okButton,
+        cancelButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   Future<void> _getScanInfoList() async {
     List<scaninfo> lst = await dao.getDataShowing();
     setState(() {
       _lst = lst;
       _counter = lst.length;
+      notifi = 'Tổng số dòng: $_counter';
     });
   }
 
@@ -219,8 +271,12 @@ class _MyHomePageState extends State<MyHomePage> {
     // Thêm dữ liệu vào database ở đây
     // ...
     // Sau khi thêm dữ liệu thành công, load danh sách mới từ database
-    dao.insertData(scanInfo);
-    await _getScanInfoList();
+    if (!await dao.checkExisteSerialNumber(scanInfo.serialnum)) {
+      dao.insertData(scanInfo);
+      await _getScanInfoList();
+    } else {
+      _showToast("Số máy trùng tiếp tục quét");
+    }
   }
 
   final ButtonStyle flatButtonStyle = OutlinedButton.styleFrom(
@@ -244,8 +300,8 @@ class _MyHomePageState extends State<MyHomePage> {
           border: Border.all(color: Colors.blueAccent),
           borderRadius: BorderRadius.circular(10.0),
         ),
-        margin: EdgeInsets.all(10.0),
-        padding: EdgeInsets.all(10.0),
+        margin: EdgeInsets.all(5.0),
+        padding: EdgeInsets.all(5.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -329,30 +385,53 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
-            OutlinedButton(
-              style: flatButtonStyle,
-              onPressed: () {
-                setState(() {
-                  if (!isScaning) {
-                    titleButtonScan = "Dừng quét";
-                    isEnableSoPhieu = false;
-                    isScaning = true;
-                    isExportAll = false;
-                    isEnnaleSerial = true;
-                  } else {
-                    titleButtonScan = "Bắt đầu quét";
-                    isScaning = false;
-                    isEnableSoPhieu = true;
-                    _exportExcel();
-                    isExportAll = true;
-                    isEnnaleSerial = false;
-                  }
-                });
-              },
-              child: Text(titleButtonScan),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    OutlinedButton(
+                      style: flatButtonStyle,
+                      onPressed: () {
+                        setState(() {
+                          if (!isScaning) {
+                            titleButtonScan = "Dừng quét";
+                            isEnableSoPhieu = false;
+                            isScaning = true;
+                            isExportAll = false;
+                            isEnnaleSerial = true;
+                          } else {
+                            titleButtonScan = "Bắt đầu quét";
+                            isScaning = false;
+                            isEnableSoPhieu = true;
+                            _exportExcel();
+                            isExportAll = true;
+                            isEnnaleSerial = false;
+                          }
+                        });
+                      },
+                      child: Text(titleButtonScan),
+                    ),
+                  ],
+                ),
+                SizedBox(width: 10),
+                // Row(
+                //   children: [
+                //     OutlinedButton(
+                //       style: flatButtonStyle,
+                //       onPressed: () {
+                //         showAlertDeleteData(context, "Xác nhận",
+                //             "Hãy vào nút xuất dữ liệu trước khi xóa. Bạn có muốn xóa toàn bộ dữ liệu không ?");
+                //       },
+                //       child: Text("Xóa hết dữ liệu"),
+                //     ),
+                //   ],
+                // ),
+              ],
             ),
+
             Text(
-              'Tổng số dòng : $_counter',
+              'Tổng số dòng: $_counter',
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 18,
@@ -415,7 +494,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _exportExcel,
+        onPressed: () {
+          if (isScaning == true && isExportAll == false) {
+            showAlertDialog(context, "Thông báo",
+                "Vui lòng dừng quét trước khi xuất tất cả");
+          } else {
+            showAlertDeleteData(
+                context, "Xác nhận", "Bạn có muốn xóa hết lịch sử cũ không ?");
+          }
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.import_export),
       ),

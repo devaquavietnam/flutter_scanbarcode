@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages, camel_case_types
 
+import 'dart:ffi';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
@@ -38,6 +40,15 @@ class dao {
           inout: maps[i]['inout'],
           isshow: maps[i]['isshow']);
     });
+  }
+
+  static Future<bool> checkExisteSerialNumber(String serial) async {
+    final Database db = await database();
+    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber',
+        where: "serialnum = ?", whereArgs: [serial], orderBy: 'id DESC');
+    // ignore: prefer_is_empty
+    if (maps.isNotEmpty) return true;
+    return false;
   }
 
   static Future<List<scaninfo>> getAllDataToExport() async {
@@ -105,5 +116,10 @@ class dao {
       where: "id = ?",
       whereArgs: [id],
     );
+  }
+
+  static Future<void> deleteAllData() async {
+    final Database db = await database();
+    await db.delete('tblserialnumber');
   }
 }

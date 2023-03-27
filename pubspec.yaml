@@ -38,6 +38,7 @@ dependencies:
   sqflite_migration_service: ^1.0.6
   path_provider: ^2.0.13
   excel: ^2.0.4
+  fluttertoast: ^8.2.1
 
 dev_dependencies:
   flutter_test:
