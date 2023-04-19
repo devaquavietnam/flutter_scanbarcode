@@ -5,7 +5,7 @@ import 'package:flutter_scanbarcode/DAO/dao.dart';
 import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as ex;
 import 'Utility/FileStorage.dart';
 
 void main() {
@@ -108,64 +108,64 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     List<scaninfo> lstobj;
     // ignore: no_leading_underscores_for_local_identifiers
-    Directory? _localFile = await getExternalStorageDirectory();
-    final downloadDirectory = '${_localFile?.path.toString()}/Download';
-    final downloadDir = Directory(downloadDirectory);
-    if (!await downloadDir.exists()) {
-      await downloadDir.create();
-    }
+    // Directory? _localFile = await getExternalStorageDirectory();
+    // final downloadDirectory = '${_localFile?.path.toString()}/Download';
+    // final downloadDir = Directory(downloadDirectory);
+    // if (!await downloadDir.exists()) {
+    //   await downloadDir.create();
+    // }
     //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-    String? appDocPath = downloadDir.path.toString();
-    print(appDocPath);
+    // String? appDocPath = downloadDir.path.toString();
+    // print(appDocPath);
     //final file = File('$appDocPath/counter.txt');
     // Write the file
-    Excel excel = Excel.createExcel();
-    Sheet sheetObject = excel['Sheet1'];
+    ex.Excel excel = ex.Excel.createExcel();
+    ex.Sheet sheetObject = excel['Sheet1'];
 
     // Ghi dữ liệu vào file Excel
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
         .value = "ID";
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
         .value = "Số máy";
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 0))
         .value = "Mã sản phẩm";
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 0))
         .value = "Số phiếu";
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: 0))
         .value = "Ngày";
     sheetObject
-        .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: 0))
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: 0))
         .value = "Xuất/nhập";
 
     // write data
     for (int i = 0; i < lst.length; i++) {
       scaninfo sc = lst[i];
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1))
           .value = sc.id;
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1))
           .value = sc.serialnum;
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1))
           .value = sc.matcode;
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i + 1))
           .value = sc.dnno;
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
           .value = sc.createdate;
       String xuatnhap = "Xuất";
       if (sc.inout == "2") {
         xuatnhap = "Nhập";
       }
       sheetObject
-          .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
           .value = xuatnhap;
       sc.isshow = 0;
       await dao.updateData(sc);
