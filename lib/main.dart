@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_for_local_identifiers, depend_on_referenced_packages
+// ignore_for_file: prefer_const_constructors, unused_local_variable, unnecessary_new, avoid_print, avoid_function_literals_in_foreach_calls, prefer_interpolation_to_compose_strings, no_leading_for_local_identifiers, depend_on_referenced_packages, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_scanbarcode/DAO/dao.dart';
@@ -6,7 +6,7 @@ import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'Utility/FileStorage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -65,7 +65,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isEnnaleSerial = false;
   bool isEnableBtnXoa = false;
   bool isExportAll = true;
-  String notifi = 'Tổng số dòng: ';
+  String errorMess = '';
+  Color errorColo = Colors.red;
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
@@ -106,8 +107,15 @@ class _MyHomePageState extends State<MyHomePage> {
       lst = await dao.getAllDataToExport();
     }
     List<scaninfo> lstobj;
+    // ignore: no_leading_underscores_for_local_identifiers
     Directory? _localFile = await getExternalStorageDirectory();
-    String? appDocPath = _localFile?.path.toString();
+    final downloadDirectory = '${_localFile?.path.toString()}/Download';
+    final downloadDir = Directory(downloadDirectory);
+    if (!await downloadDir.exists()) {
+      await downloadDir.create();
+    }
+    //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+    String? appDocPath = downloadDir.path.toString();
     print(appDocPath);
     //final file = File('$appDocPath/counter.txt');
     // Write the file
@@ -162,32 +170,34 @@ class _MyHomePageState extends State<MyHomePage> {
       sc.isshow = 0;
       await dao.updateData(sc);
       _getScanInfoList();
-      notifi = 'Tổng số dòng: $_counter';
     }
     // Lưu file Excel vào thư mục Documents trên thiết bịg
-    String filename = 'Aqua_SoMay_' + DateTime.now().toString();
-    String excelFilePath = '$appDocPath/' + filename + '.xlsx';
-    if (_localFile != null) {
-      File file = File(excelFilePath);
-      List<int>? bytes = excel.encode();
-      file.createSync(recursive: true);
-      file.writeAsBytes(bytes!);
-      //DialogExample();
-      // ignore: use_build_context_synchronously
-      _showToast("Xuất tập tin excel thành công");
-    }
+    String filename = 'Aqua_SoMay_' + DateTime.now().toString() + '.xlsx';
+    //  String excelFilePath = '$appDocPath/' + filename + '.xlsx';
+    List<int>? bytes = excel.encode();
+    FileStorage.writeCounter(bytes, filename);
+    // if (_localFile != null) {
+    //   File file = File(excelFilePath);
+    //   List<int>? bytes = excel.encode();
+    //   file.createSync(recursive: true);
+    //   file.writeAsBytes(bytes!);
+    //DialogExample();
+    // ignore: use_build_context_synchronously
+    // _showToast("Xuất tập tin excel thành công");
+    showAlertDialog(context, "Thông báo", "Xuất excel thành công");
+    //}
   }
 
-  _showToast(String message) {
-    Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0);
-  }
+  // _showToast(String message) {
+  //   Fluttertoast.showToast(
+  //       msg: message,
+  //       toastLength: Toast.LENGTH_SHORT,
+  //       gravity: ToastGravity.CENTER,
+  //       timeInSecForIosWeb: 1,
+  //       backgroundColor: Colors.red,
+  //       textColor: Colors.white,
+  //       fontSize: 16.0);
+  // }
 
   showAlertDialog(BuildContext context, String title, String conten) {
     // set up the button
@@ -263,7 +273,6 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _lst = lst;
       _counter = lst.length;
-      notifi = 'Tổng số dòng: $_counter';
     });
   }
 
@@ -274,8 +283,16 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!await dao.checkExisteSerialNumber(scanInfo.serialnum)) {
       dao.insertData(scanInfo);
       await _getScanInfoList();
+      setState(() {
+        errorMess = "Quét thành công";
+        errorColo = Colors.green;
+      });
     } else {
-      _showToast("Số máy trùng tiếp tục quét");
+      setState(() {
+        errorMess = "Số máy trùng tiếp tục quét";
+        errorColo = Colors.red;
+      });
+      //  SystemSound.play(SystemSoundType.alert);
     }
   }
 
@@ -385,6 +402,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
+            Text(
+              errorMess,
+              style: TextStyle(
+                color: errorColo,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                // decoration: TextDecoration.underline,
+                //decorationColor: Colors.red,
+                decorationStyle: TextDecorationStyle.wavy,
+              ),
+              textAlign: TextAlign.left,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -393,6 +422,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     OutlinedButton(
                       style: flatButtonStyle,
                       onPressed: () {
+                        //FileStorage.writeCounter("AAAAAAAAAAAA", "abc.txt");
                         setState(() {
                           if (!isScaning) {
                             titleButtonScan = "Dừng quét";
@@ -400,13 +430,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             isScaning = true;
                             isExportAll = false;
                             isEnnaleSerial = true;
+                            errorMess = "";
                           } else {
                             titleButtonScan = "Bắt đầu quét";
                             isScaning = false;
                             isEnableSoPhieu = true;
                             _exportExcel();
+                            dnnoController.clear();
                             isExportAll = true;
                             isEnnaleSerial = false;
+                            errorMess = "";
                           }
                         });
                       },
