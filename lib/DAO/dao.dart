@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages, camel_case_types
 
+import 'dart:ffi';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
@@ -11,7 +13,7 @@ class dao {
       join(await getDatabasesPath(), 'serialnumber.db'),
       onCreate: (db, version) {
         return db.execute(
-          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT)",
+          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT,isshow INTEGER)",
         );
       },
       version: 103,
@@ -24,7 +26,32 @@ class dao {
   }
 
   // Lấy toàn bộ dữ liệu
-  static Future<List<scaninfo>> getAllData() async {
+  static Future<List<scaninfo>> getDataShowing() async {
+    final Database db = await database();
+    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber',
+        where: 'isshow = 1', orderBy: 'id DESC');
+    return List.generate(maps.length, (i) {
+      return scaninfo(
+          id: maps[i]['id'],
+          serialnum: maps[i]['serialnum'],
+          matcode: maps[i]['matcode'],
+          dnno: maps[i]['dnno'],
+          createdate: maps[i]['createdate'],
+          inout: maps[i]['inout'],
+          isshow: maps[i]['isshow']);
+    });
+  }
+
+  static Future<bool> checkExisteSerialNumber(String serial) async {
+    final Database db = await database();
+    final List<Map<String, dynamic>> maps = await db.query('tblserialnumber',
+        where: "serialnum = ?", whereArgs: [serial], orderBy: 'id DESC');
+    // ignore: prefer_is_empty
+    if (maps.isNotEmpty) return true;
+    return false;
+  }
+
+  static Future<List<scaninfo>> getAllDataToExport() async {
     final Database db = await database();
     final List<Map<String, dynamic>> maps =
         await db.query('tblserialnumber', orderBy: 'id DESC');
@@ -35,7 +62,8 @@ class dao {
           matcode: maps[i]['matcode'],
           dnno: maps[i]['dnno'],
           createdate: maps[i]['createdate'],
-          inout: maps[i]['inout']);
+          inout: maps[i]['inout'],
+          isshow: maps[i]['isshow']);
     });
   }
 
@@ -88,5 +116,10 @@ class dao {
       where: "id = ?",
       whereArgs: [id],
     );
+  }
+
+  static Future<void> deleteAllData() async {
+    final Database db = await database();
+    await db.delete('tblserialnumber');
   }
 }
