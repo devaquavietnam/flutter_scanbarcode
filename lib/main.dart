@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scanbarcode/DAO/dao.dart';
 import 'package:flutter_scanbarcode/DAO/scaninfo.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart' as ex;
 import 'Utility/FileStorage.dart';
 
@@ -86,6 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  // ignore: duplicate_ignore, duplicate_ignore
   Future<void> _exportExcel() async {
     // setState(() {
     //   // This call to setState tells the Flutter framework that something has
@@ -187,17 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
     showAlertDialog(context, "Thông báo", "Xuất excel thành công");
     //}
   }
-
-  // _showToast(String message) {
-  //   Fluttertoast.showToast(
-  //       msg: message,
-  //       toastLength: Toast.LENGTH_SHORT,
-  //       gravity: ToastGravity.CENTER,
-  //       timeInSecForIosWeb: 1,
-  //       backgroundColor: Colors.red,
-  //       textColor: Colors.white,
-  //       fontSize: 16.0);
-  // }
 
   showAlertDialog(BuildContext context, String title, String conten) {
     // set up the button
