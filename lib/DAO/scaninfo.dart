@@ -2,6 +2,7 @@
 class scaninfo {
   final int? id;
   final String serialnum;
+  final String whcode;
   final String matcode;
   final String dnno;
   final String? createdate;
@@ -11,6 +12,7 @@ class scaninfo {
   scaninfo({
     this.id,
     required this.serialnum,
+    required this.whcode,
     required this.matcode,
     required this.dnno,
     this.createdate,
@@ -22,6 +24,7 @@ class scaninfo {
     return {
       'id': id,
       'serialnum': serialnum,
+      'whcode': whcode,
       'matcode': matcode,
       'dnno': dnno,
       'createdate': createdate,

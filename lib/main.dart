@@ -68,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController serialnumController = TextEditingController();
   TextEditingController matcodeController = TextEditingController();
   TextEditingController dnnoController = TextEditingController();
+  TextEditingController whcodeController = TextEditingController();
   late FocusNode myFocusNode;
   @override
   void initState() {
@@ -133,12 +134,15 @@ class _MyHomePageState extends State<MyHomePage> {
         .value = "Mã sản phẩm";
     sheetObject
         .cell(ex.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 0))
-        .value = "Số phiếu";
+        .value = "Mã Kho";
     sheetObject
         .cell(ex.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: 0))
-        .value = "Ngày";
+        .value = "Số phiếu";
     sheetObject
         .cell(ex.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: 0))
+        .value = "Ngày";
+    sheetObject
+        .cell(ex.CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: 0))
         .value = "Xuất/nhập";
 
     // write data
@@ -155,16 +159,19 @@ class _MyHomePageState extends State<MyHomePage> {
           .value = sc.matcode;
       sheetObject
           .cell(ex.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i + 1))
-          .value = sc.dnno;
+          .value = sc.whcode;
       sheetObject
           .cell(ex.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1))
+          .value = sc.dnno;
+      sheetObject
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
           .value = sc.createdate;
       String xuatnhap = "Xuất";
       if (sc.inout == "2") {
         xuatnhap = "Nhập";
       }
       sheetObject
-          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1))
+          .cell(ex.CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: i + 1))
           .value = xuatnhap;
       sc.isshow = 0;
       await dao.updateData(sc);
@@ -295,223 +302,237 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQueryData.fromWindow(WidgetsBinding.instance.window);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         toolbarHeight: 40,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.blueAccent),
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        margin: EdgeInsets.all(5.0),
-        padding: EdgeInsets.all(5.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Row(
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints.tightFor(
+            height: mq.size.height,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent),
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.all(5.0),
+            padding: EdgeInsets.all(5.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Radio<int>(
-                      value: 0,
-                      groupValue: _selectedOption,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedOption = value;
-                        });
-                      },
+                    Row(
+                      children: [
+                        Radio<int>(
+                          value: 0,
+                          groupValue: _selectedOption,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedOption = value;
+                            });
+                          },
+                        ),
+                        const Text('Xuất kho'),
+                      ],
                     ),
-                    const Text('Xuất kho'),
+                    Row(
+                      children: [
+                        Radio<int>(
+                          value: 1,
+                          groupValue: _selectedOption,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedOption = value;
+                            });
+                          },
+                        ),
+                        const Text('Nhập kho'),
+                      ],
+                    ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Radio<int>(
-                      value: 1,
-                      groupValue: _selectedOption,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedOption = value;
-                        });
-                      },
-                    ),
-                    const Text('Nhập kho'),
-                  ],
+                TextField(
+                  controller: dnnoController,
+                  decoration: InputDecoration(
+                      hintText: "Nhập số phiếu",
+                      labelText: "Số phiếu",
+                      enabled: isEnableSoPhieu),
                 ),
-              ],
-            ),
-
-            TextField(
-              controller: dnnoController,
-              decoration: InputDecoration(
-                  hintText: "Nhập số phiếu",
-                  labelText: "Số phiếu",
-                  enabled: isEnableSoPhieu),
-            ),
-            // TextField(
-            //   controller: matcodeController,
-            //   decoration: InputDecoration(
-            //     hintText: "Nhập mã sản phẩm",
-            //     labelText: "Mã sản phẩm",
-            //   ),
-            // ),
-            TextField(
-              controller: serialnumController,
-              focusNode: myFocusNode,
-              decoration: InputDecoration(
-                  hintText: "Nhập số máy",
-                  labelText: "Số máy",
-                  enabled: isEnnaleSerial),
-              onSubmitted: (value) {
-                if (dnnoController.text.isEmpty) {
-                  showAlertDialog(
-                      context, "Thông báo", "Số phiếu không được để trống");
-                } else {
-                  if (value.isEmpty || value.length < 9) {
-                    showAlertDialog(context, "Thông báo",
-                        "Số máy không đúng định dạng Aqua.Xin vui lòng thử lại");
-                  } else {
-                    final newScanInfo = scaninfo(
-                        serialnum: value,
-                        matcode: value.substring(0, 9),
-                        dnno: dnnoController.text,
-                        createdate: DateTime.now().toIso8601String(),
-                        inout: _selectedOption.toString(),
-                        isshow: 1);
-                    _addScanToDatabase(newScanInfo);
-                    serialnumController.clear();
-                    if (isScaning) {
-                      myFocusNode.requestFocus();
+                TextField(
+                  controller: whcodeController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập mã kho",
+                    labelText: "Mã kho",
+                    enabled: isEnableSoPhieu
+                  ),
+                ),
+                TextField(
+                  controller: serialnumController,
+                  focusNode: myFocusNode,
+                  decoration: InputDecoration(
+                      hintText: "Nhập số máy",
+                      labelText: "Số máy",
+                      enabled: isEnnaleSerial),
+                  onSubmitted: (value) {
+                    if (dnnoController.text.isEmpty) {
+                      showAlertDialog(
+                          context, "Thông báo", "Số phiếu không được để trống");
                     }
-                  }
-                }
-              },
-            ),
-            Text(
-              errorMess,
-              style: TextStyle(
-                color: errorColo,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                // decoration: TextDecoration.underline,
-                //decorationColor: Colors.red,
-                decorationStyle: TextDecorationStyle.wavy,
-              ),
-              textAlign: TextAlign.left,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+                    else if(whcodeController.text.isEmpty){
+                        showAlertDialog(
+                          context, "Thông báo", "Mã kho không được để trống");
+                    } else {
+                      if (value.isEmpty || value.length < 9) {
+                        showAlertDialog(context, "Thông báo",
+                            "Số máy không đúng định dạng Aqua.Xin vui lòng thử lại");
+                      } else {
+                        final newScanInfo = scaninfo(
+                            serialnum: value,
+                            whcode: whcodeController.text,
+                            matcode: value.substring(0, 9),
+                            dnno: dnnoController.text,
+                            createdate: DateTime.now().toIso8601String(),
+                            inout: _selectedOption.toString(),
+                            isshow: 1);
+                        _addScanToDatabase(newScanInfo);
+                        serialnumController.clear();
+                        if (isScaning) {
+                          myFocusNode.requestFocus();
+                        }
+                      }
+                    }
+                  },
+                ),
+                Text(
+                  errorMess,
+                  style: TextStyle(
+                    color: errorColo,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    // decoration: TextDecoration.underline,
+                    //decorationColor: Colors.red,
+                    decorationStyle: TextDecorationStyle.wavy,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    OutlinedButton(
-                      style: flatButtonStyle,
-                      onPressed: () {
-                        //FileStorage.writeCounter("AAAAAAAAAAAA", "abc.txt");
-                        setState(() {
-                          if (!isScaning) {
-                            titleButtonScan = "Dừng quét";
-                            isEnableSoPhieu = false;
-                            isScaning = true;
-                            isExportAll = false;
-                            isEnnaleSerial = true;
-                            errorMess = "";
-                          } else {
-                            titleButtonScan = "Bắt đầu quét";
-                            isScaning = false;
-                            isEnableSoPhieu = true;
-                            _exportExcel();
-                            dnnoController.clear();
-                            isExportAll = true;
-                            isEnnaleSerial = false;
-                            errorMess = "";
-                          }
-                        });
-                      },
-                      child: Text(titleButtonScan),
+                    Row(
+                      children: [
+                        OutlinedButton(
+                          style: flatButtonStyle,
+                          onPressed: () {
+                            //FileStorage.writeCounter("AAAAAAAAAAAA", "abc.txt");
+                            setState(() {
+                              if (!isScaning) {
+                                titleButtonScan = "Dừng quét";
+                                isEnableSoPhieu = false;
+                                isScaning = true;
+                                isExportAll = false;
+                                isEnnaleSerial = true;
+                                errorMess = "";
+                              } else {
+                                titleButtonScan = "Bắt đầu quét";
+                                isScaning = false;
+                                isEnableSoPhieu = true;
+                                _exportExcel();
+                                dnnoController.clear();
+                                isExportAll = true;
+                                isEnnaleSerial = false;
+                                errorMess = "";
+                              }
+                            });
+                          },
+                          child: Text(titleButtonScan),
+                        ),
+                      ],
                     ),
+                    SizedBox(width: 10),
+                    // Row(
+                    //   children: [
+                    //     OutlinedButton(
+                    //       style: flatButtonStyle,
+                    //       onPressed: () {
+                    //         showAlertDeleteData(context, "Xác nhận",
+                    //             "Hãy vào nút xuất dữ liệu trước khi xóa. Bạn có muốn xóa toàn bộ dữ liệu không ?");
+                    //       },
+                    //       child: Text("Xóa hết dữ liệu"),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
-                SizedBox(width: 10),
-                // Row(
-                //   children: [
-                //     OutlinedButton(
-                //       style: flatButtonStyle,
-                //       onPressed: () {
-                //         showAlertDeleteData(context, "Xác nhận",
-                //             "Hãy vào nút xuất dữ liệu trước khi xóa. Bạn có muốn xóa toàn bộ dữ liệu không ?");
-                //       },
-                //       child: Text("Xóa hết dữ liệu"),
-                //     ),
-                //   ],
-                // ),
+
+                Text(
+                  'Tổng số dòng: $_counter',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 18,
+                    // decoration: TextDecoration.underline,
+                    //decorationColor: Colors.red,
+                    decorationStyle: TextDecorationStyle.wavy,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                Expanded(
+                  child: FutureBuilder<List<scaninfo>>(
+                    future: Future.value(_lst),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text('Error: ${snapshot.error}'),
+                        );
+                      }
+
+                      if (!snapshot.hasData) {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      final scanInfoList = snapshot.data!;
+
+                      if (scanInfoList.isEmpty) {
+                        return Center(
+                          child: Text('No data available.'),
+                        );
+                      }
+
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height -
+                            AppBar().preferredSize.height -
+                            MediaQuery.of(context).padding.top -
+                            MediaQuery.of(context).padding.bottom -
+                            16.0, // set a fixed height for the ListView
+                        child: ListView.builder(
+                          itemCount: scanInfoList.length,
+                          itemBuilder: (context, index) {
+                            final scanInfo = scanInfoList[index];
+
+                            return ListTile(
+                              title: Text("Số máy: " + scanInfo.serialnum),
+                              subtitle: Text("Số phiếu: " +
+                                  scanInfo.dnno +
+                                  "| Mã sản phẩm: " +
+                                  scanInfo.matcode),
+                              //trailing: Text(scanInfo.dnno),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-
-            Text(
-              'Tổng số dòng: $_counter',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 18,
-                // decoration: TextDecoration.underline,
-                //decorationColor: Colors.red,
-                decorationStyle: TextDecorationStyle.wavy,
-              ),
-              textAlign: TextAlign.left,
-            ),
-            Expanded(
-              child: FutureBuilder<List<scaninfo>>(
-                future: Future.value(_lst),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Error: ${snapshot.error}'),
-                    );
-                  }
-
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-
-                  final scanInfoList = snapshot.data!;
-
-                  if (scanInfoList.isEmpty) {
-                    return Center(
-                      child: Text('No data available.'),
-                    );
-                  }
-
-                  return SizedBox(
-                    height: MediaQuery.of(context).size.height -
-                        AppBar().preferredSize.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom -
-                        16.0, // set a fixed height for the ListView
-                    child: ListView.builder(
-                      itemCount: scanInfoList.length,
-                      itemBuilder: (context, index) {
-                        final scanInfo = scanInfoList[index];
-
-                        return ListTile(
-                          title: Text("Số máy: " + scanInfo.serialnum),
-                          subtitle: Text("Số phiếu: " +
-                              scanInfo.dnno +
-                              "| Mã sản phẩm: " +
-                              scanInfo.matcode),
-                          //trailing: Text(scanInfo.dnno),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

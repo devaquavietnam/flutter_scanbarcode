@@ -1,6 +1,5 @@
 // ignore_for_file: depend_on_referenced_packages, camel_case_types
 
-import 'dart:ffi';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -13,10 +12,10 @@ class dao {
       join(await getDatabasesPath(), 'serialnumber.db'),
       onCreate: (db, version) {
         return db.execute(
-          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT,isshow INTEGER)",
+          "CREATE TABLE tblserialnumber(id INTEGER PRIMARY KEY, serialnum TEXT, whcode TEXT, matcode TEXT, dnno TEXT,createdate TEXT,inout TEXT,isshow INTEGER)",
         );
       },
-      version: 103,
+      version: 104,
     );
   }
 
@@ -34,6 +33,7 @@ class dao {
       return scaninfo(
           id: maps[i]['id'],
           serialnum: maps[i]['serialnum'],
+          whcode: maps[i]['whcode'],
           matcode: maps[i]['matcode'],
           dnno: maps[i]['dnno'],
           createdate: maps[i]['createdate'],
@@ -59,6 +59,7 @@ class dao {
       return scaninfo(
           id: maps[i]['id'],
           serialnum: maps[i]['serialnum'],
+          whcode: maps[i]['whcode'],
           matcode: maps[i]['matcode'],
           dnno: maps[i]['dnno'],
           createdate: maps[i]['createdate'],
